@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js";
 export const getUsers=async(req,res,next)=>{
  try {
+    console.log("req",req.user);
     const allUserData= await User.find().select("-password");
      return res.status(200).json({
         success:true,
