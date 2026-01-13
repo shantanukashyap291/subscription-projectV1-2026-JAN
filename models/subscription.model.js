@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const subscriptionSchema=new Schema({
+ const subscriptionSchema=new Schema({
     name:{type:String,
         minlength:6,
             maxLength:30,
@@ -10,8 +10,8 @@ const subscriptionSchema=new Schema({
     },
     price:{
         type:Number,
-        required:[true,'subscription name is required'],
-        price:[0,'price should be greater than zero']
+        required:[true,'price for the subscription is required'],
+        min:[0,'price should be greater than zero']
 
     },
     currencry:{
@@ -57,28 +57,34 @@ const subscriptionSchema=new Schema({
          type:Date,
         validate:{
             validator:function(val){ 
-                val>this.startDate()
+               return  val>this.startDate()
             },
             message:'renewalDate must be after start date '
         }
     }
 },{timestamps:true});
 
-subscriptionSchema.pre('save',function(next){
-  if(!this.renewalDate){
-    const renewalPeriods={
-        monthly:30,
-        weekly:7,
-        yearly:365,
-        daily:1
-    }
-    this.renewalDate=new Date(this.startDate);
-    this.renewalDate.setDate(this.renewalDate.getDate()+renewalPeriods[this.frequency])
+subscriptionSchema.pre('save', async function () {
+  if (!this.renewalDate) {
+    const renewalPeriods = {
+      monthly: 30,
+      weekly: 7,
+      yearly: 365,
+      daily: 1
+    };
+
+    this.renewalDate = new Date(this.startDate);
+    this.renewalDate.setDate(
+      this.renewalDate.getDate() + renewalPeriods[this.frequency]
+    );
   }
 
-//   simillarly auto update the status
-if(this.renewalDate<new Date()){
-    this.status='expired'
-}
-next()
-})
+  if (this.renewalDate < new Date()) {
+    this.status = 'expired';
+  }
+});
+
+
+const subscription=mongoose.model("Subscription",subscriptionSchema)
+
+export default subscription;
